@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroPredict AI - Solusi Cerdas Kualitas Udara (SDG 11)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        eco: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased overflow-x-hidden">
+
+    <div id="toast-container" class="fixed top-4 right-4 left-4 md:left-auto z-50 flex flex-col gap-2 max-w-full md:max-w-sm pointer-events-none"></div>
+
+    <header class="sticky top-0 bg-white/90 backdrop-blur-md border-b border-slate-100 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="bg-eco-500 text-white p-2 rounded-xl flex items-center justify-center">
+                    <i class="fa-solid fa-wind text-lg animate-pulse"></i>
+                </div>
+                <span class="text-lg md:text-xl font-bold text-slate-900 tracking-tight">AeroPredict<span class="text-eco-500">.AI</span></span>
+            </div>
+            <nav class="hidden lg:flex items-center gap-6">
+                <a href="#analisis" class="text-sm font-medium text-slate-600 hover:text-eco-600 transition">Analisis AI</a>
+                <a href="#edukasi" class="text-sm font-medium text-slate-600 hover:text-eco-600 transition">Aero Insights</a>
+                <a href="#sebaran" class="text-sm font-medium text-slate-600 hover:text-eco-600 transition">Peta Sebaran</a>
+                <a href="#riwayat" class="text-sm font-medium text-slate-600 hover:text-eco-600 transition">Riwayat</a>
+            </nav>
+            <div>
+                <a href="#alert-section" class="bg-eco-600 hover:bg-eco-700 text-white px-3.5 py-2 rounded-xl text-xs md:text-sm font-semibold transition shadow-md shadow-eco-500/10 flex items-center gap-1.5">
+                    <i class="fa-solid fa-bell"></i> <span class="hidden xs:inline">Smart Alert</span><span class="inline xs:hidden">Alert</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <section class="relative bg-gradient-to-b from-eco-50 to-white pt-10 pb-16 md:py-20 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+                <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+                    <span class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-[11px] md:text-xs font-semibold bg-eco-100 text-eco-700 mx-auto lg:mx-0">
+                        <span class="w-1.5 h-1.5 rounded-full bg-eco-500 animate-ping"></span>
+                        Teknologi Berbasis SDG 11: Kota Berkelanjutan
+                    </span>
+                    <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 leading-tight">
+                        Ketahui Polusi Sebelum Terhirup, <span class="text-eco-500 block lg:inline">Lindungi Setiap Napas.</span>
+                    </h1>
+                    <p class="text-sm md:text-base lg:text-lg text-slate-600 max-w-xl mx-auto lg:mx-0">
+                        AeroPredict AI mendeteksi lokasi geografismu secara instan dan menggunakan algoritma cerdas untuk memprediksi kadar PM2.5 di sekitarmu demi keselamatan paru-paru keluarga.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+                        <a href="#analisis" class="bg-slate-900 hover:bg-slate-800 text-white text-center px-6 py-3.5 rounded-xl text-sm font-bold transition shadow-lg shadow-slate-900/10">
+                            Mulai Deteksi Sekarang
+                        </a>
+                        <button onclick="detectUserLocation(true)" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-6 py-3.5 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-location-crosshairs text-eco-500"></i> Cari Ulang Lokasi
+                        </button>
+                    </div>
+                </div>
+                <div class="lg:col-span-5">
+                    <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-5 md:p-6 space-y-4 md:space-y-6 relative max-w-md mx-auto">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-sm md:text-base">Kondisi Udara Terkini</h3>
+                                <p class="text-[10px] md:text-xs text-slate-400" id="current-time-hero">Memuat waktu...</p>
+                            </div>
+                            <span class="bg-amber-50 text-amber-700 px-2 py-1 rounded-lg text-[10px] md:text-xs font-semibold flex items-center gap-1">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Sedang
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 md:gap-4">
+                            <div class="bg-slate-50 p-3 md:p-4 rounded-xl">
+                                <span class="text-[10px] text-slate-400 block mb-0.5">Rata-rata PM2.5</span>
+                                <span class="text-xl md:text-2xl font-extrabold text-slate-800">58.4 <span class="text-xs font-medium">µg/m³</span></span>
+                            </div>
+                            <div class="bg-slate-50 p-3 md:p-4 rounded-xl">
+                                <span class="text-[10px] text-slate-400 block mb-0.5">Peringkat Global</span>
+                                <span class="text-xl md:text-2xl font-extrabold text-rose-500">#4 <span class="text-[10px] font-medium text-slate-400">Terburuk</span></span>
+                            </div>
+                        </div>
+                        <div class="bg-amber-50/50 border border-amber-200/50 rounded-xl p-3 md:p-4 flex gap-2.5">
+                            <i class="fa-solid fa-circle-info text-amber-500 mt-0.5 text-xs"></i>
+                            <div class="text-[11px] md:text-xs text-slate-600 leading-relaxed">
+                                Wilayah Jabodetabek saat ini berada dalam status waspada. AI menyarankan untuk mengurangi aktivitas luar ruangan bagi anak-anak dan lansia.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main id="analisis" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16 grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
+        
+        <div class="lg:col-span-5 bg-white rounded-2xl shadow-lg border border-slate-100 p-6 md:p-8 space-y-6 flex flex-col justify-between">
+            <div class="space-y-4">
+                <div class="flex items-center gap-2 mb-1">
+                    <div class="w-2.5 h-6 bg-eco-500 rounded-full"></div>
+                    <h2 class="text-xl md:text-2xl font-bold text-slate-900">Analisis Prediktif AI</h2>
+                </div>
+                <p class="text-xs md:text-sm text-slate-500">
+                    Sesuaikan parameter lingkungan di bawah atau gunakan fitur koordinat otomatis GPS HP Anda untuk analisis instan.
+                </p>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs md:text-sm font-semibold text-slate-700 mb-1 flex justify-between items-center">
+                            Nama Wilayah / Kota
+                            <button onclick="detectUserLocation(true)" class="text-xs text-eco-600 hover:text-eco-700 font-bold flex items-center gap-1 active:scale-95 transition-transform">
+                                <i class="fa-solid fa-location-arrow"></i> Deteksi GPS HP
+                            </button>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                                <i class="fa-solid fa-city text-[10px]"></i>
+                            </span>
+                            <input type="text" id="input-wilayah" value="Sedang mendeteksi..." class="block w-full pl-9 pr-3 py-2.5 md:py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-eco-500 text-xs md:text-sm transition" placeholder="Masukkan nama kota...">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs md:text-sm font-semibold text-slate-700 mb-1">
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-temperature-three-quarters text-orange-500"></i> Suhu Udara</span>
+                            <span id="label-suhu" class="text-slate-500 text-xs">29 °C</span>
+                        </div>
+                        <input type="range" id="input-suhu" min="15" max="45" value="29" class="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-eco-500 py-1" oninput="updateSliders()">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs md:text-sm font-semibold text-slate-700 mb-1">
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-droplet text-blue-500"></i> Kelembapan Udara</span>
+                            <span id="label-kelembapan" class="text-slate-500 text-xs">75 %</span>
+                        </div>
+                        <input type="range" id="input-kelembapan" min="20" max="100" value="75" class="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-eco-500 py-1" oninput="updateSliders()">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs md:text-sm font-semibold text-slate-700 mb-1">
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-wind text-teal-500"></i> Kecepatan Angin</span>
+                            <span id="label-angin" class="text-slate-500 text-xs">12 km/jam</span>
+                        </div>
+                        <input type="range" id="input-angin" min="0" max="50" value="12" class="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-eco-500 py-1" oninput="updateSliders()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 mt-4">
+                <button onclick="calculateAIPrediction()" class="w-full bg-eco-600 hover:bg-eco-700 active:scale-95 transition-transform text-white font-bold py-3 px-4 rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-eco-600/10">
+                    <i class="fa-solid fa-microchip"></i> Proses Prediksi AI
+                </button>
+            </div>
+        </div>
+
+        <div class="lg:col-span-7 flex flex-col gap-6">
+            
+            <div id="ai-result-card" class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 md:p-8 relative overflow-hidden transition-all duration-300">
+                <div class="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                    <div class="md:col-span-5 text-center md:text-left md:border-r md:border-slate-100 md:pr-4">
+                        <p class="text-xs text-slate-400 font-semibold mb-1">Hasil Prediksi PM2.5</p>
+                        <div class="flex items-baseline justify-center md:justify-start gap-1">
+                            <span id="pm25-score" class="text-5xl md:text-6xl font-black text-slate-900 transition-all">...</span>
+                            <span class="text-slate-500 text-xs md:text-sm font-medium">µg/m³</span>
+                        </div>
+                        <div id="aqi-badge" class="mt-3 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[10px] font-bold transition">
+                            <span class="w-2 h-2 rounded-full"></span>
+                            <span>Memproses Lokasi...</span>
+                        </div>
+                    </div>
+                    <div class="md:col-span-7 space-y-3 text-center md:text-left">
+                        <h4 class="text-base md:text-lg font-bold text-slate-800" id="status-title">Memuat Analisis GPS...</h4>
+                        <p class="text-xs text-slate-500 leading-relaxed" id="status-desc">
+                            Harap izinkan akses lokasi pada browser HP Anda agar AI dapat mengambil stasiun data kualitas udara terdekat secara otomatis.
+                        </p>
+                        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2.5 text-left">
+                            <div class="bg-white p-2 rounded-lg text-slate-600 flex items-center justify-center shadow-sm">
+                                <i class="fa-solid fa-heart-pulse text-eco-500 text-sm" id="recommendation-icon"></i>
+                            </div>
+                            <div>
+                                <span class="text-[9px] uppercase font-bold tracking-wider text-slate-400 block">Saran Aktivitas</span>
+                                <span class="text-xs font-semibold text-slate-700 leading-tight block" id="recommendation-text">Mengambil keputusan kesehatan...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-4 md:p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-slate-800 text-xs md:text-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-chart-line text-eco-500"></i> Tren Riwayat 24 Jam Terakhir (Prediksi AI)
+                    </h3>
+                    <span class="text-[9px] font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-500">REAL-TIME</span>
+                </div>
+                <div class="relative w-full h-[180px] md:h-[220px]">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <section id="edukasi" class="bg-slate-900 text-white py-12 md:py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+            <div class="text-center max-w-2xl mx-auto space-y-3">
+                <span class="text-eco-400 text-[10px] md:text-xs font-bold tracking-widest uppercase">Aero Insights</span>
+                <h2 class="text-2xl md:text-4xl font-extrabold">Mengapa Kualitas Udara Sangat Krusial?</h2>
+                <p class="text-slate-400 text-xs md:text-sm leading-relaxed">
+                    Mewujudkan kota yang aman dan inklusif dimulai dari udara sehat. AeroPredict berkomitmen mendukung pilar SDG 11 di Indonesia.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+                <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 md:p-6 space-y-4 hover:border-eco-500/50 transition">
+                    <div class="bg-slate-700/50 text-eco-400 w-11 h-11 rounded-xl flex items-center justify-center text-lg shadow-inner">
+                        <i class="fa-solid fa-microscope"></i>
+                    </div>
+                    <h3 class="text-base md:text-lg font-bold">Kamus Singkat PM2.5</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        PM2.5 adalah partikel udara mikroskopis yang berukuran kurang dari 2.5 mikrometer. Ukurannya yang 30 kali lebih tipis dari rambut manusia membuatnya sangat berbahaya karena bisa langsung masuk menembus organ pernapasan dalam.
+                    </p>
+                </div>
+                <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 md:p-6 space-y-4 hover:border-eco-500/50 transition">
+                    <div class="bg-slate-700/50 text-rose-400 w-11 h-11 rounded-xl flex items-center justify-center text-lg shadow-inner">
+                        <i class="fa-solid fa-face-mask"></i>
+                    </div>
+                    <h3 class="text-base md:text-lg font-bold">Ancaman ISPA di HP</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Di kota besar Indonesia seperti Jakarta dan Surabaya, paparan udara buruk yang berkepanjangan adalah penyebab utama lonjakan kasus ISPA, asma, gangguan imunitas anak, hingga penyakit kardiovaskular akut.
+                    </p>
+                </div>
+                <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 md:p-6 space-y-4 hover:border-eco-500/50 transition">
+                    <div class="bg-slate-700/50 text-teal-400 w-11 h-11 rounded-xl flex items-center justify-center text-lg shadow-inner">
+                        <i class="fa-solid fa-city"></i>
+                    </div>
+                    <h3 class="text-base md:text-lg font-bold">Visi Sehat SDG 11</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Dengan menanamkan AI AeroPredict di perangkat ponsel pintar Anda, kita bersama-sama membangun sistem peringatan dini cerdas guna membentuk perlindungan komunal yang lincah dan berdaya tangkal tinggi terhadap polusi.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="sebaran" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 space-y-6">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                    <div class="w-2.5 h-6 bg-eco-500 rounded-full"></div>
+                    <h2 class="text-xl md:text-2xl font-bold text-slate-900">Peta Sebaran & Ranking Polusi</h2>
+                </div>
+                <p class="text-xs md:text-sm text-slate-500">
+                    Sistem koordinat spasial interaktif menunjukkan titik indeks kualitas udara riil di perkotaan Indonesia.
+                </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+                <span class="text-[11px] font-semibold text-slate-400 mr-1">Legenda:</span>
+                <span class="inline-flex items-center gap-1 text-[9px] font-bold bg-green-50 text-green-700 px-2 py-1 rounded">🟢 Baik</span>
+                <span class="inline-flex items-center gap-1 text-[9px] font-bold bg-amber-50 text-amber-700 px-2 py-1 rounded">🟡 Sedang</span>
+                <span class="inline-flex items-center gap-1 text-[9px] font-bold bg-rose-50 text-rose-700 px-2 py-1 rounded">🔴 Buruk</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            <div class="lg:col-span-8 bg-white p-3 md:p-4 rounded-2xl shadow-lg border border-slate-100 flex flex-col justify-between">
+                <div id="map" class="h-[260px] md:h-[350px] w-full rounded-xl shadow-inner"></div>
+                <p class="text-center text-[9px] md:text-[10px] text-slate-400 mt-2">
+                    <i class="fa-solid fa-circle-info"></i> Klik marker pin untuk memuat parameter kota tersebut ke prediktor AI secara instan.
+                </p>
+            </div>
+
+            <div class="lg:col-span-4 bg-white rounded-2xl shadow-lg border border-slate-100 p-5 md:p-6 space-y-4 flex flex-col justify-between">
+                <div>
+                    <h3 class="font-bold text-slate-800 text-xs md:text-sm pb-3 border-b border-slate-100 flex items-center justify-between">
+                        <span>Peringkat Polusi Indonesia</span>
+                        <i class="fa-solid fa-arrow-down-wide-narrow text-slate-400"></i>
+                    </h3>
+                    
+                    <div class="space-y-2.5 mt-3" id="leaderboard-list">
+                        <div class="flex items-center justify-between p-2 hover:bg-slate-50 rounded-xl transition">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-xs font-bold text-slate-400">#1</span>
+                                <div>
+                                    <span class="text-xs font-bold text-slate-800 block">Tangerang Selatan</span>
+                                    <span class="text-[9px] text-slate-400 uppercase">Banten</span>
+                                </div>
+                            </div>
+                            <span class="bg-rose-50 text-rose-700 text-[10px] font-extrabold px-2 py-1 rounded-lg">158.2 µg/m³</span>
+                        </div>
+
+                        <div class="flex items-center justify-between p-2 hover:bg-slate-50 rounded-xl transition">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-xs font-bold text-slate-400">#2</span>
+                                <div>
+                                    <span class="text-xs font-bold text-slate-800 block">Jakarta Pusat</span>
+                                    <span class="text-[9px] text-slate-400 uppercase">DKI Jakarta</span>
+                                </div>
+                            </div>
+                            <span class="bg-rose-50 text-rose-700 text-[10px] font-extrabold px-2 py-1 rounded-lg">151.0 µg/m³</span>
+                        </div>
+
+                        <div class="flex items-center justify-between p-2 hover:bg-slate-50 rounded-xl transition">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-xs font-bold text-slate-400">#3</span>
+                                <div>
+                                    <span class="text-xs font-bold text-slate-800 block">Bandung</span>
+                                    <span class="text-[9px] text-slate-400 uppercase">Jawa Barat</span>
+                                </div>
+                            </div>
+                            <span class="bg-amber-50 text-amber-700 text-[10px] font-extrabold px-2 py-1 rounded-lg">94.5 µg/m³</span>
+                        </div>
+
+                        <div class="flex items-center justify-between p-2 hover:bg-slate-50 rounded-xl transition">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-xs font-bold text-slate-400">#4</span>
+                                <div>
+                                    <span class="text-xs font-bold text-slate-800 block">Surabaya</span>
+                                    <span class="text-[9px] text-slate-400 uppercase">Jawa Timur</span>
+                                </div>
+                            </div>
+                            <span class="bg-amber-50 text-amber-700 text-[10px] font-extrabold px-2 py-1 rounded-lg">78.1 µg/m³</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-eco-50 p-2.5 rounded-xl border border-eco-100 text-center mt-3">
+                    <span class="text-[8px] text-eco-700 font-bold block uppercase">Aero-Fact</span>
+                    <span class="text-[10px] text-slate-600 leading-normal block">Yogyakarta saat ini berstatus kota dengan sirkulasi udara paling sehat se-Jawa.</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="bg-slate-100 py-12 md:py-16" id="riwayat">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
+            
+            <div class="lg:col-span-7 bg-white rounded-2xl shadow-lg p-5 md:p-8 border border-slate-100 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-database text-eco-500"></i>
+                        <h3 class="text-lg md:text-xl font-bold text-slate-900">Database Log Riwayat Pengguna</h3>
+                    </div>
+                    <button onclick="clearHistoryLog()" class="text-xs text-rose-500 hover:text-rose-600 font-bold flex items-center gap-1 active:scale-95 transition-transform self-start sm:self-auto">
+                        <i class="fa-solid fa-trash-can"></i> Bersihkan Log
+                    </button>
+                </div>
+                <p class="text-[11px] text-slate-400">
+                    Tabel log di bawah mensimulasikan penyimpanan SQLite secara lokal menggunakan `localStorage` browser.
+                </p>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-100 max-w-full">
+                    <table class="min-w-[500px] w-full text-[11px] md:text-xs text-left">
+                        <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-100">
+                            <tr>
+                                <th class="p-3">Waktu</th>
+                                <th class="p-3">Wilayah</th>
+                                <th class="p-3">Kondisi Cuaca</th>
+                                <th class="p-3 text-center">PM2.5</th>
+                                <th class="p-3 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="database-rows" class="divide-y divide-slate-100 text-slate-600">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="alert-section" class="lg:col-span-5 bg-white rounded-2xl shadow-lg p-5 md:p-8 border border-slate-100 space-y-6 flex flex-col justify-between">
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2">
+                        <div class="bg-rose-100 text-rose-600 p-1.5 rounded-lg text-sm flex items-center justify-center">
+                            <i class="fa-solid fa-bell"></i>
+                        </div>
+                        <h3 class="text-lg md:text-xl font-bold text-slate-900">AeroPeringatan (Smart Alert)</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        Sistem notifikasi real-time via WhatsApp/Email apabila kualitas udara di koordinat terdeteksi melonjak bahaya.
+                    </p>
+
+                    <form onsubmit="subscribeAlert(event)" class="space-y-3.5 pt-2">
+                        <div>
+                            <label class="block text-[10px] md:text-xs font-semibold text-slate-600 mb-1">Nama Lengkap</label>
+                            <input type="text" id="alert-nama" required class="block w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-eco-500 focus:outline-none" placeholder="Budi Santoso">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] md:text-xs font-semibold text-slate-600 mb-1">E-mail Aktif</label>
+                            <input type="email" id="alert-email" required class="block w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-eco-500 focus:outline-none" placeholder="budi@email.com">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] md:text-xs font-semibold text-slate-600 mb-1">Nomor WhatsApp</label>
+                            <input type="tel" id="alert-wa" required class="block w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-eco-500 focus:outline-none" placeholder="081234567xxx">
+                        </div>
+                        <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 active:scale-95 transition-transform text-white font-bold py-2.5 rounded-lg text-xs flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-paper-plane"></i> Daftarkan Smart Alert
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 mx-4 shadow-2xl border border-slate-100 transform scale-95 transition-transform duration-300" id="success-modal">
+            <div class="text-center space-y-4">
+                <div class="bg-eco-100 text-eco-600 w-14 h-14 rounded-full flex items-center justify-center text-2xl mx-auto">
+                    <i class="fa-regular fa-circle-check"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900">Smart Alert Aktif!</h3>
+                <p class="text-xs text-slate-500 leading-relaxed" id="modal-success-message">
+                    Layanan pemantauan kualitas udara berbasis koordinat lokal berhasil terdaftar.
+                </p>
+                <div class="pt-2">
+                    <button onclick="closeSuccessModal()" class="w-full bg-slate-950 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl transition text-xs">
+                        Tutup Jendela
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-slate-950 text-slate-400 py-10 border-t border-slate-900 mt-auto text-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-12 gap-8 items-center text-center md:text-left">
+            <div class="md:col-span-5 space-y-3">
+                <div class="flex items-center justify-center md:justify-start gap-2 text-white">
+                    <div class="bg-eco-500 p-1.5 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-wind text-sm"></i>
+                    </div>
+                    <span class="text-base font-bold">AeroPredict<span class="text-eco-500">.AI</span></span>
+                </div>
+                <p class="text-[11px] text-slate-500 max-w-sm mx-auto md:mx-0 leading-relaxed">
+                    Sistem pemantau dan prediksi kualitas udara berbasis AI guna membantu menyukseskan program Sustainable Development Goals PBB nomor 11 di Indonesia.
+                </p>
+            </div>
+            <div class="md:col-span-3 space-y-2">
+                <h4 class="font-bold text-white text-sm">Navigasi</h4>
+                <a href="#analisis" class="block hover:text-white transition">Model Analisis AI</a>
+                <a href="#edukasi" class="block hover:text-white transition">SDG 11 Edukasi</a>
+                <a href="#sebaran" class="block hover:text-white transition">Peta Geografis</a>
+            </div>
+            <div class="md:col-span-4 space-y-2">
+                <h4 class="font-bold text-white text-sm">Keterangan Proyek</h4>
+                <p class="text-slate-500 text-[10px] leading-relaxed">
+                    Dirancang khusus sebagai prototipe cerdas web app interaktif yang siap disalin, dimodifikasi, dan didemonstrasikan di VS Code.
+                </p>
+                <p class="text-[10px] text-eco-500">&copy; 2026 AeroPredict AI - Indonesia.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
